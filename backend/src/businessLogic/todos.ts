@@ -21,6 +21,7 @@ export async function createTodo(createTodoRequest: CreateTodoRequest, userId: s
         todoId: todoId,
         createdAt: createdAt,
         name: createTodoRequest.name,
+        description: createTodoRequest.description,
         dueDate: createTodoRequest.dueDate,
         done: false
     };
@@ -51,4 +52,24 @@ export async function createAttachmentPresignedUrl(todoId: string, userId: strin
     const attachmentId = uuid.v4();
     await todoAccess.createAttachmentPresignedUrl(todoId, userId, attachmentId);
     return await attachmentUtils.createAttachmentPresignedUrl(attachmentId);
+}
+
+export async function deleteAttachmentUrl(todoId: string, userId: string) {
+    logger.info("Delete AttachmentUrl")
+
+    const todo = await todoAccess.getTodo(userId, todoId);
+
+    logger.info("Check delete image todo" + todo)
+    if (todo.attachmentUrl) {
+        logger.info("Delete attachmentUrl todo")
+
+        await attachmentUtils.deleteAttachmentUrl(todo.attachmentUrl);
+        await todoAccess.deleteAttachmentUrl(todoId, userId);
+    }
+}
+
+export async function getTodo(userId: string, todoId: string): Promise<any> {
+    logger.info("Get todo by todoId " + todoId);
+
+    return await todoAccess.getTodo(userId, todoId);
 }

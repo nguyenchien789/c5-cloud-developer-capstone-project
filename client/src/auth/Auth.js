@@ -3,7 +3,7 @@ import { authConfig } from '../config';
 
 export default class Auth {
   accessToken;
-  idToken;
+  idToken = '';
   expiresAt;
 
   auth0 = new auth0.WebAuth({
@@ -24,6 +24,12 @@ export default class Auth {
     this.getAccessToken = this.getAccessToken.bind(this);
     this.getIdToken = this.getIdToken.bind(this);
     this.renewSession = this.renewSession.bind(this);
+    
+    if (localStorage.getItem('isLoggedIn') === "true") {
+      this.accessToken = localStorage.getItem('accessToken');
+      this.idToken = localStorage.getItem('idToken');
+      this.expiresAt = localStorage.getItem('expiresAt');
+    }
   }
 
   login() {
@@ -61,6 +67,10 @@ export default class Auth {
     this.accessToken = authResult.accessToken;
     this.idToken = authResult.idToken;
     this.expiresAt = expiresAt;
+    
+    localStorage.setItem('accessToken', this.accessToken);
+    localStorage.setItem('idToken', this.idToken);
+    localStorage.setItem('expiresAt', this.expiresAt);
 
     // navigate to the home route
     this.history.replace('/');

@@ -45,7 +45,7 @@ export class TodosAccess {
         logger.info("getTodosForUser");
 
         const result = await this.docClient.query({
-            TableName: process.env.TODOS_TABLE,
+            TableName: this.table,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId
@@ -66,9 +66,10 @@ export class TodosAccess {
                 todoId: todoId,
                 userId: userId
             },
-            UpdateExpression: "set #n = :n, dueDate = :dueDate, done = :done",
+            UpdateExpression: "set #n = :n, description = :description, dueDate = :dueDate, done = :done",
             ExpressionAttributeValues: {
                 ":n": todoUpdate.name,
+                ":description": todoUpdate.description,
                 ":dueDate": todoUpdate.dueDate,
                 ":done": todoUpdate.done,
             },
@@ -91,6 +92,38 @@ export class TodosAccess {
             UpdateExpression: "set attachmentUrl = :attachmentUrl",
             ExpressionAttributeValues: {
                 ":attachmentUrl": attachmentUrl,
+            },
+        }).promise();
+    }
+
+    async getTodo(userId: string, todoId: string): Promise<TodoItem> {
+        logger.info('getTodo')
+
+        const query = await this.docClient.query({
+            TableName: this.table,
+            KeyConditionExpression: 'userId = :userId AND todoId = :todoId',
+            ExpressionAttributeValues: {
+                ':userId': userId,
+                ':todoId': todoId
+            }
+        }).promise();
+
+        const items = query.Items;
+        return items[0] as TodoItem;
+    }
+
+    async deleteAttachmentUrl(todoId: string, userId: string) {
+        logger.info("deleteAttachmentUrl");
+
+        await this.docClient.update({
+            TableName: this.table,
+            Key: {
+                userId: userId,
+                todoId: todoId
+            },
+            UpdateExpression: "set attachmentUrl = :attachmentUrl",
+            ExpressionAttributeValues: {
+                ":attachmentUrl": null,
             },
         }).promise();
     }

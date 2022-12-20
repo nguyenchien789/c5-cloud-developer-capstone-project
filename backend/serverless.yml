@@ -26,7 +26,7 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: chiennm99-serverless-c4-todo-images-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: chiennm99-c5-cloud-developer-capstone-project-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
   logs:
@@ -172,6 +172,58 @@ functions:
         Action:
           - dynamodb:UpdateItem 
         Resource: !GetAtt TodosTable.Arn
+
+  DeleteAttachmentUrl:
+    handler: src/lambda/http/deleteAttachmentUrl.handler
+    events:
+      - http:
+          method: delete
+          path: image/{todoId}
+          cors: true
+          authorizer: Auth
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - s3:PutObject
+          - s3:GetObject
+          - s3:DeleteObject
+        Resource: !GetAtt AttachmentsBucket.Arn
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:Query
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+        Resource: !GetAtt TodosTable.Arn
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
+
+  GetTodoById:
+    handler: src/lambda/http/getTodoById.handler
+    events:
+      - http:
+          method: get
+          path: todos/{todoId}
+          cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource:
+          - "*"
 
 resources:
   Resources:
